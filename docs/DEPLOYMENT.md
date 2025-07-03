@@ -456,13 +456,13 @@ npx serve . -p 3001
 **Staging:**
 ```bash
 # Use staging API URL
-sed -i 's/qa-codepush.cleartrip.com/staging-codepush.cleartrip.com/g' docs/swagger.yaml
+sed -i 's/${domain}/staging-codepush.cleartrip.com/g' docs/swagger.yaml
 ```
 
 **Production:**
 ```bash
 # Use production API URL
-sed -i 's/qa-codepush.cleartrip.com/api.your-domain.com/g' docs/swagger.yaml
+sed -i 's/${domain}/api.your-domain.com/g' docs/swagger.yaml
 ```
 
 ### SSL/HTTPS Configuration
@@ -584,7 +584,7 @@ add_header Content-Security-Policy "
     style-src 'self' 'unsafe-inline' https://unpkg.com https://cdn.jsdelivr.net;
     img-src 'self' data: https:;
     font-src 'self' https://unpkg.com;
-    connect-src 'self' https://qa-codepush.cleartrip.com https://api.your-domain.com;
+    connect-src 'self' https://${domain} https://api.your-domain.com;
 " always;
 ```
 

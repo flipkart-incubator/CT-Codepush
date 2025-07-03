@@ -99,7 +99,7 @@ curl http://localhost:3000/api/account
 
 **Step 1: Get Access Token**
 
-If using the production server (`qa-codepush.cleartrip.com`), you need an access token:
+If using the production server (`${domain}`), you need an access token:
 
 ```bash
 # Option A: Use existing CodePush CLI
