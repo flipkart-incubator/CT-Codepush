@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodePush API Documentation</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+    <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.11.0/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="https://unpkg.com/swagger-ui-dist@5.11.0/favicon-16x16.png" sizes="16x16" />
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
+        body {
+            margin:0;
+            background: #fafafa;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        }
+
+        .topbar {
+            background-color: #1f2937;
+            padding: 10px 0;
+        }
+
+        .topbar-wrapper {
+            display: flex;
+            align-items: center;
+            max-width: 1460px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .link {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: #fff;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+
+        .link img {
+            margin-right: 10px;
+        }
+
+        .info {
+            margin-left: auto;
+            color: #ffffff;
+            font-size: 14px;
+        }
+
+        .swagger-ui .topbar {
+            display: none;
+        }
+
+        .custom-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .custom-header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .custom-header p {
+            margin: 1rem 0 0 0;
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .auth-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 14px;
+            color: #495057;
+        }
+
+        .auth-info strong {
+            color: #212529;
+        }
+
+        .auth-steps {
+            background: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .auth-steps h4 {
+            margin-top: 0;
+            color: #004085;
+        }
+
+        .auth-steps ol {
+            margin-bottom: 0;
+        }
+
+        .auth-steps li {
+            margin-bottom: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="topbar">
+        <div class="topbar-wrapper">
+            <a href="#" class="link">
+                <span>CodePush API Documentation</span>
+            </a>
+            <div class="info">
+                Interactive API Documentation
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-header">
+        <h1>CodePush API</h1>
+        <p>Comprehensive REST API for managing mobile app deployments, releases, and team collaboration</p>
+    </div>
+
+    <div style="max-width: 1460px; margin: 0 auto; padding: 0 20px;">
+        <div class="auth-info">
+            <strong>🔐 Authentication Required:</strong> Most endpoints require a Bearer token. Include your CodePush access key in the Authorization header: <code>Authorization: Bearer YOUR_ACCESS_KEY</code>
+        </div>
+
+        <div class="auth-steps">
+            <h4>🚀 Quick Start Guide</h4>
+            <ol>
+                <li>Click the <strong>"Authorize"</strong> button below</li>
+                <li>Enter your CodePush access key in the <strong>"Bearer"</strong> field</li>
+                <li>Click <strong>"Authorize"</strong> to authenticate</li>
+                <li>Try out any endpoint by clicking <strong>"Try it out"</strong></li>
+                <li>Fill in the required parameters and click <strong>"Execute"</strong></li>
+            </ol>
+            <p><strong>Note:</strong> You can get your access key from the CodePush dashboard or CLI.</p>
+        </div>
+    </div>
+
+    <div id="swagger-ui"></div>
+
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" charset="UTF-8"></script>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js" charset="UTF-8"></script>
+    
+    <script>
+        window.onload = function() {
+            // Begin Swagger UI call region
+            const ui = SwaggerUIBundle({
+                url: './swagger.yaml',
+                dom_id: '#swagger-ui',
+                deepLinking: true,
+                presets: [
+                    SwaggerUIBundle.presets.apis,
+                    SwaggerUIStandalonePreset
+                ],
+                plugins: [
+                    SwaggerUIBundle.plugins.DownloadUrl
+                ],
+                layout: "StandaloneLayout",
+                defaultModelsExpandDepth: 1,
+                defaultModelExpandDepth: 1,
+                defaultModelRendering: 'model',
+                displayRequestDuration: true,
+                docExpansion: 'list',
+                filter: true,
+                showExtensions: true,
+                showCommonExtensions: true,
+                tryItOutEnabled: true,
+                requestInterceptor: function(request) {
+                    // Log requests for debugging
+                    console.log('API Request:', request);
+                    return request;
+                },
+                responseInterceptor: function(response) {
+                    // Log responses for debugging
+                    console.log('API Response:', response);
+                    return response;
+                },
+                onComplete: function() {
+                    console.log('Swagger UI loaded successfully');
+                },
+                onFailure: function(data) {
+                    console.error('Failed to load Swagger UI:', data);
+                },
+                validatorUrl: null, // Disable validator badge
+                supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch']
+            });
+
+            // Custom styling and functionality
+            setTimeout(() => {
+                // Add custom CSS for better theming
+                const style = document.createElement('style');
+                style.textContent = `
+                    .swagger-ui .opblock.opblock-post {
+                        border-color: #10b981;
+                        background: rgba(16, 185, 129, 0.1);
+                    }
+                    .swagger-ui .opblock.opblock-post .opblock-summary-method {
+                        background: #10b981;
+                    }
+                    .swagger-ui .opblock.opblock-get {
+                        border-color: #3b82f6;
+                        background: rgba(59, 130, 246, 0.1);
+                    }
+                    .swagger-ui .opblock.opblock-get .opblock-summary-method {
+                        background: #3b82f6;
+                    }
+                    .swagger-ui .opblock.opblock-delete {
+                        border-color: #ef4444;
+                        background: rgba(239, 68, 68, 0.1);
+                    }
+                    .swagger-ui .opblock.opblock-delete .opblock-summary-method {
+                        background: #ef4444;
+                    }
+                    .swagger-ui .opblock.opblock-patch {
+                        border-color: #f59e0b;
+                        background: rgba(245, 158, 11, 0.1);
+                    }
+                    .swagger-ui .opblock.opblock-patch .opblock-summary-method {
+                        background: #f59e0b;
+                    }
+                    .swagger-ui .btn.authorize {
+                        background-color: #667eea;
+                        border-color: #667eea;
+                    }
+                    .swagger-ui .btn.authorize:hover {
+                        background-color: #5a67d8;
+                        border-color: #5a67d8;
+                    }
+                `;
+                document.head.appendChild(style);
+            }, 1000);
+
+            window.ui = ui;
+        };
+    </script>
+</body>
+</html> 

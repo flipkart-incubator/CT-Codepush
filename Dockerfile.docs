@@ -1,0 +1,33 @@
+# Dockerfile for CodePush API Documentation
+FROM nginx:alpine
+
+# Metadata
+LABEL maintainer="CodePush Team"
+LABEL description="CodePush API Documentation - Swagger UI"
+LABEL version="1.0.0"
+
+# Install curl for health checks
+RUN apk add --no-cache curl
+
+# Copy documentation files
+COPY docs/ /usr/share/nginx/html/
+
+# Copy custom nginx configuration
+COPY deployment/nginx-docs.conf /etc/nginx/conf.d/default.conf
+
+# Create directory for logs
+RUN mkdir -p /var/log/nginx
+
+# Set proper permissions
+RUN chown -R nginx:nginx /usr/share/nginx/html
+RUN chmod -R 755 /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost/ || exit 1
+
+# Start nginx
+CMD ["nginx", "-g", "daemon off;"] 

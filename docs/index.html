@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodePush API Documentation</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="gradient-bg text-white">
+        <div class="container mx-auto px-6 py-16 text-center">
+            <h1 class="text-5xl font-light mb-4">CodePush API</h1>
+            <p class="text-xl opacity-90 max-w-2xl mx-auto">
+                Comprehensive REST API documentation for managing mobile app deployments, releases, and team collaboration
+            </p>
+            <div class="mt-8">
+                <a href="swagger-ui.html" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors inline-flex items-center">
+                    <i class="fas fa-play mr-2"></i>
+                    Explore Interactive API
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Cards -->
+    <section class="container mx-auto px-6 py-16">
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Interactive Documentation -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <div class="text-blue-500 text-3xl mb-4">
+                    <i class="fas fa-rocket"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Interactive Documentation</h3>
+                <p class="text-gray-600 mb-4">
+                    Try out API endpoints directly in your browser with our Swagger UI interface.
+                </p>
+                <a href="swagger-ui.html" class="text-blue-500 hover:text-blue-700 font-medium inline-flex items-center">
+                    Open Swagger UI <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+
+            <!-- OpenAPI Spec -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <div class="text-green-500 text-3xl mb-4">
+                    <i class="fas fa-file-code"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">OpenAPI Specification</h3>
+                <p class="text-gray-600 mb-4">
+                    Download the complete API specification in YAML or JSON format.
+                </p>
+                <div class="space-x-4">
+                    <a href="swagger.yaml" class="text-green-500 hover:text-green-700 font-medium">
+                        <i class="fas fa-download mr-1"></i> YAML
+                    </a>
+                    <a href="swagger.json" class="text-green-500 hover:text-green-700 font-medium">
+                        <i class="fas fa-download mr-1"></i> JSON
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Start -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <div class="text-purple-500 text-3xl mb-4">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Quick Start Guide</h3>
+                <p class="text-gray-600 mb-4">
+                    Get started with the CodePush API in just a few steps.
+                </p>
+                <a href="#quick-start" class="text-purple-500 hover:text-purple-700 font-medium inline-flex items-center">
+                    Get Started <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Features -->
+    <section class="bg-white py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-semibold text-center mb-12">API Features</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="text-center">
+                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-shield-alt text-blue-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2">Authentication & Security</h3>
+                    <p class="text-gray-600 text-sm">Google OAuth integration and secure access key management</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-mobile-alt text-green-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2">App Management</h3>
+                    <p class="text-gray-600 text-sm">Create, update, and manage mobile applications</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-layer-group text-purple-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2">Deployment Environments</h3>
+                    <p class="text-gray-600 text-sm">Multiple deployment environments with isolated releases</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-upload text-red-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2">Release Management</h3>
+                    <p class="text-gray-600 text-sm">Upload, promote, and rollback app releases</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users text-yellow-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2">Team Collaboration</h3>
+                    <p class="text-gray-600 text-sm">Manage team members and permissions</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-indigo-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chart-line text-indigo-500 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold mb-2">Analytics & Metrics</h3>
+                    <p class="text-gray-600 text-sm">Track deployment metrics and user adoption</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Guide -->
+    <section id="quick-start" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-semibold text-center mb-12">Quick Start Guide</h2>
+            <div class="max-w-4xl mx-auto">
+                <div class="space-y-8">
+                    <!-- Step 1 -->
+                    <div class="flex items-start">
+                        <div class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-semibold mr-4 mt-1">
+                            1
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">Get Your Access Key</h3>
+                            <p class="text-gray-600 mb-3">
+                                Obtain your CodePush access key from the dashboard or CLI. This will be used for authentication.
+                            </p>
+                            <div class="bg-gray-800 text-green-400 p-3 rounded font-mono text-sm">
+                                $ code-push access-key add "My API Key"
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="flex items-start">
+                        <div class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-semibold mr-4 mt-1">
+                            2
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">Authenticate Your Requests</h3>
+                            <p class="text-gray-600 mb-3">
+                                Include your access key in the Authorization header for all API requests.
+                            </p>
+                            <div class="bg-gray-800 text-green-400 p-3 rounded font-mono text-sm">
+                                Authorization: Bearer YOUR_ACCESS_KEY
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="flex items-start">
+                        <div class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-semibold mr-4 mt-1">
+                            3
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">Try the Interactive Documentation</h3>
+                            <p class="text-gray-600 mb-3">
+                                Use our Swagger UI to explore endpoints and test API calls directly in your browser.
+                            </p>
+                            <a href="swagger-ui.html" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors inline-flex items-center">
+                                <i class="fas fa-external-link-alt mr-2"></i>
+                                Open Interactive Docs
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="flex items-start">
+                        <div class="bg-blue-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-semibold mr-4 mt-1">
+                            4
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-lg mb-2">Start Building</h3>
+                            <p class="text-gray-600 mb-3">
+                                Create your first app, set up deployments, and start managing releases.
+                            </p>
+                            <div class="bg-gray-800 text-green-400 p-3 rounded font-mono text-sm">
+                                POST /apps<br>
+                                {<br>
+                                &nbsp;&nbsp;"name": "MyApp",<br>
+                                &nbsp;&nbsp;"description": "My awesome mobile app"<br>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Endpoints Overview -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-6">
+            <h2 class="text-3xl font-semibold text-center mb-12">API Endpoints Overview</h2>
+            <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <!-- Authentication -->
+                <div class="border rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-3 text-blue-600">
+                        <i class="fas fa-lock mr-2"></i>Authentication
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">POST</span> <code>/auth/login/google</code> - Google OAuth login</li>
+                        <li><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">GET</span> <code>/auth/accesskey</code> - Get access key</li>
+                        <li><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">GET</span> <code>/account</code> - Get user profile</li>
+                    </ul>
+                </div>
+
+                <!-- Apps -->
+                <div class="border rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-3 text-green-600">
+                        <i class="fas fa-mobile-alt mr-2"></i>Apps
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">GET</span> <code>/apps</code> - List applications</li>
+                        <li><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">POST</span> <code>/apps</code> - Create application</li>
+                        <li><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">PATCH</span> <code>/apps/{name}</code> - Update application</li>
+                        <li><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">DELETE</span> <code>/apps/{name}</code> - Delete application</li>
+                    </ul>
+                </div>
+
+                <!-- Deployments -->
+                <div class="border rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-3 text-purple-600">
+                        <i class="fas fa-layer-group mr-2"></i>Deployments
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">GET</span> <code>/apps/{name}/deployments</code> - List deployments</li>
+                        <li><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">POST</span> <code>/apps/{name}/deployments</code> - Create deployment</li>
+                        <li><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">DELETE</span> <code>/apps/{name}/deployments/{env}</code> - Delete deployment</li>
+                    </ul>
+                </div>
+
+                <!-- Releases -->
+                <div class="border rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-3 text-red-600">
+                        <i class="fas fa-upload mr-2"></i>Releases
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">POST</span> <code>/.../release</code> - Upload release</li>
+                        <li><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">POST</span> <code>/.../promote/{target}</code> - Promote release</li>
+                        <li><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">POST</span> <code>/.../rollback</code> - Rollback release</li>
+                        <li><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">GET</span> <code>/.../history</code> - Get release history</li>
+                    </ul>
+                </div>
+
+                <!-- Collaborators -->
+                <div class="border rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-3 text-yellow-600">
+                        <i class="fas fa-users mr-2"></i>Collaborators
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">GET</span> <code>/apps/{name}/collaborators</code> - List collaborators</li>
+                        <li><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">POST</span> <code>/.../collaborators/{email}</code> - Add collaborator</li>
+                        <li><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">DELETE</span> <code>/.../collaborators/{email}</code> - Remove collaborator</li>
+                    </ul>
+                </div>
+
+                <!-- Metrics -->
+                <div class="border rounded-lg p-6">
+                    <h3 class="font-semibold text-lg mb-3 text-indigo-600">
+                        <i class="fas fa-chart-line mr-2"></i>Metrics
+                    </h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">GET</span> <code>/.../metrics</code> - Get deployment metrics</li>
+                        <li class="text-gray-500">Track downloads, installs, and failures</li>
+                        <li class="text-gray-500">Monitor active user adoption</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2024 CodePush API Documentation. Built with ❤️ for developers.</p>
+            <div class="mt-4 space-x-4">
+                <a href="https://github.com/microsoft/code-push" class="text-gray-400 hover:text-white">
+                    <i class="fab fa-github mr-1"></i> GitHub
+                </a>
+                <a href="swagger-ui.html" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-book mr-1"></i> API Docs
+                </a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html> 

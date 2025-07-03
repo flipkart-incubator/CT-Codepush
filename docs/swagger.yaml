@@ -1,0 +1,1152 @@
+openapi: 3.0.3
+info:
+  title: CodePush API
+  description: |
+    CodePush API for managing mobile app deployments, releases, and collaborators.
+    
+    ## Authentication
+    The API uses Bearer token authentication. Include your access key in the Authorization header:
+    ```
+    Authorization: Bearer YOUR_ACCESS_KEY
+    ```
+    
+    ## Rate Limiting
+    API requests are limited to 1000 requests per hour per access key.
+    
+    ## Error Handling
+    The API returns standard HTTP status codes and JSON error responses.
+  version: 1.0.0
+  contact:
+    name: CodePush Support
+    url: https://github.com/microsoft/code-push
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: ${domain}
+    description: Production server
+  - url: http://localhost:3000/
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /auth/login/google:
+    post:
+      tags:
+        - Authentication
+      summary: Google OAuth Login
+      description: Initiate Google OAuth login flow
+      parameters:
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+          description: URL to redirect after successful authentication
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+            default: web
+          description: Source of the request (web, cli, etc.)
+      responses:
+        '302':
+          description: Redirect to Google OAuth
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/register/google:
+    post:
+      tags:
+        - Authentication
+      summary: Google OAuth Registration
+      description: Initiate Google OAuth registration flow
+      parameters:
+        - name: redirect_uri
+          in: query
+          required: true
+          schema:
+            type: string
+          description: URL to redirect after successful registration
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+            default: web
+          description: Source of the request
+      responses:
+        '302':
+          description: Redirect to Google OAuth
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/accesskey:
+    get:
+      tags:
+        - Authentication
+      summary: Get Access Key
+      description: Retrieve access key after OAuth authentication
+      parameters:
+        - name: source
+          in: query
+          required: false
+          schema:
+            type: string
+            default: web
+        - name: redirect
+          in: query
+          required: false
+          schema:
+            type: string
+            default: /code-push/dashboard
+      responses:
+        '200':
+          description: Access key retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessKeyResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /account:
+    get:
+      tags:
+        - Authentication
+      summary: Get User Profile
+      description: Get current user account information
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /accessKeys/{key}:
+    delete:
+      tags:
+        - Authentication
+      summary: Revoke Access Key
+      description: Revoke a specific access key
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Access key to revoke
+      responses:
+        '200':
+          description: Access key revoked successfully
+        '404':
+          description: Access key not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # App Management Endpoints
+  /apps:
+    get:
+      tags:
+        - Apps
+      summary: List Applications
+      description: Get all applications for the authenticated user
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/App'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Apps
+      summary: Create Application
+      description: Create a new application
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppRequest'
+      responses:
+        '201':
+          description: Application created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: App name already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}:
+    get:
+      tags:
+        - Apps
+      summary: Get Application
+      description: Get details of a specific application
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+      responses:
+        '200':
+          description: Application details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  app:
+                    $ref: '#/components/schemas/App'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Apps
+      summary: Update Application
+      description: Update application details
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAppRequest'
+      responses:
+        '200':
+          description: Application updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/App'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Apps
+      summary: Delete Application
+      description: Delete an application and all its deployments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+      responses:
+        '200':
+          description: Application deleted successfully
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/transfer/{email}:
+    post:
+      tags:
+        - Apps
+      summary: Transfer Application
+      description: Transfer application ownership to another user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          description: Email of the new owner
+      responses:
+        '200':
+          description: Application transferred successfully
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Deployment Management Endpoints
+  /apps/{appName}/deployments:
+    get:
+      tags:
+        - Deployments
+      summary: List Deployments
+      description: Get all deployments for an application
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+      responses:
+        '200':
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Deployment'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Deployments
+      summary: Create Deployment
+      description: Create a new deployment for an application
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDeploymentRequest'
+      responses:
+        '201':
+          description: Deployment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deployment'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/deployments/{deploymentName}:
+    get:
+      tags:
+        - Deployments
+      summary: Get Deployment
+      description: Get details of a specific deployment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+      responses:
+        '200':
+          description: Deployment details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment:
+                    $ref: '#/components/schemas/Deployment'
+        '404':
+          description: Deployment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Deployments
+      summary: Delete Deployment
+      description: Delete a deployment and all its releases
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+      responses:
+        '200':
+          description: Deployment deleted successfully
+        '404':
+          description: Deployment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Release Management Endpoints
+  /apps/{appName}/deployments/{deploymentName}/release:
+    post:
+      tags:
+        - Releases
+      summary: Upload Release
+      description: Upload a new release bundle to a deployment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReleaseRequest'
+      responses:
+        '201':
+          description: Release uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Release'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/deployments/{deploymentName}/promote/{targetDeployment}:
+    post:
+      tags:
+        - Releases
+      summary: Promote Release
+      description: Promote a release from one deployment to another
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Source deployment name
+        - name: targetDeployment
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Target deployment name
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoteRequest'
+      responses:
+        '200':
+          description: Release promoted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Release'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/deployments/{deploymentName}/rollback:
+    post:
+      tags:
+        - Releases
+      summary: Rollback Deployment
+      description: Rollback deployment to previous version
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+      responses:
+        '200':
+          description: Rollback successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Release'
+        '409':
+          description: Cannot rollback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/deployments/{deploymentName}/rollback/{targetRelease}:
+    post:
+      tags:
+        - Releases
+      summary: Rollback to Specific Release
+      description: Rollback deployment to a specific release version
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+        - name: targetRelease
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Target release label
+      responses:
+        '200':
+          description: Rollback successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Release'
+        '409':
+          description: Cannot rollback
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/deployments/{deploymentName}/history:
+    get:
+      tags:
+        - Releases
+      summary: Get Release History
+      description: Get the release history for a deployment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+      responses:
+        '200':
+          description: Release history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Release'
+        '404':
+          description: Deployment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Releases
+      summary: Clear Release History
+      description: Clear all release history for a deployment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+      responses:
+        '200':
+          description: History cleared successfully
+        '404':
+          description: Deployment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/deployments/{deploymentName}/metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Get Deployment Metrics
+      description: Get metrics for a deployment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: deploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the deployment
+      responses:
+        '200':
+          description: Deployment metrics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/DeploymentMetrics'
+        '404':
+          description: Deployment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Collaboration Endpoints
+  /apps/{appName}/collaborators:
+    get:
+      tags:
+        - Collaborators
+      summary: List Collaborators
+      description: Get all collaborators for an application
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+      responses:
+        '200':
+          description: List of collaborators
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collaborators:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/CollaboratorPermissions'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /apps/{appName}/collaborators/{email}:
+    post:
+      tags:
+        - Collaborators
+      summary: Add Collaborator
+      description: Add a collaborator to an application
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          description: Email of the collaborator
+      responses:
+        '201':
+          description: Collaborator added successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Collaborators
+      summary: Remove Collaborator
+      description: Remove a collaborator from an application
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: appName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Name of the application
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          description: Email of the collaborator
+      responses:
+        '200':
+          description: Collaborator removed successfully
+        '404':
+          description: Collaborator or application not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: CodePush access key for authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          description: Additional error details
+      required:
+        - message
+
+    AccessKeyResponse:
+      type: object
+      properties:
+        accessKey:
+          type: string
+          description: The access key for API authentication
+        isNewAccount:
+          type: boolean
+          description: Whether this is a new account
+        redirectUrl:
+          type: string
+          description: URL to redirect to
+      required:
+        - accessKey
+
+    UserProfile:
+      type: object
+      properties:
+        account:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+              format: email
+            name:
+              type: string
+          required:
+            - id
+            - email
+            - name
+
+    App:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Application name
+        description:
+          type: string
+          description: Application description
+        deployments:
+          type: array
+          items:
+            type: string
+          description: List of deployment names
+        collaborators:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CollaboratorPermissions'
+          description: Map of collaborator emails to permissions
+      required:
+        - name
+
+    CreateAppRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Application name
+          pattern: '^[a-zA-Z0-9_-]+$'
+          minLength: 1
+          maxLength: 50
+        description:
+          type: string
+          description: Application description
+          maxLength: 500
+      required:
+        - name
+
+    UpdateAppRequest:
+      type: object
+      properties:
+        description:
+          type: string
+          description: Application description
+          maxLength: 500
+
+    Deployment:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Deployment name
+        key:
+          type: string
+          description: Deployment key for client SDK
+        package:
+          $ref: '#/components/schemas/Release'
+          description: Current release package
+      required:
+        - name
+        - key
+
+    CreateDeploymentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Deployment name
+          pattern: '^[a-zA-Z0-9_-]+$'
+          minLength: 1
+          maxLength: 50
+      required:
+        - name
+
+    Release:
+      type: object
+      properties:
+        appVersion:
+          type: string
+          description: Target app version
+        blobUrl:
+          type: string
+          description: URL to the release bundle
+        description:
+          type: string
+          description: Release description
+        isDisabled:
+          type: boolean
+          description: Whether the release is disabled
+        isMandatory:
+          type: boolean
+          description: Whether the release is mandatory
+        label:
+          type: string
+          description: Release label (e.g., v1, v2)
+        packageHash:
+          type: string
+          description: SHA-256 hash of the package
+        releaseMethod:
+          type: string
+          description: Method used to create the release
+        releasedBy:
+          type: string
+          description: Email of the user who created the release
+        rollout:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Rollout percentage
+        size:
+          type: integer
+          description: Package size in bytes
+        uploadTime:
+          type: integer
+          description: Upload timestamp
+      required:
+        - appVersion
+        - label
+        - packageHash
+        - size
+        - uploadTime
+
+    ReleaseRequest:
+      type: object
+      properties:
+        appVersion:
+          type: string
+          description: Target app version
+        description:
+          type: string
+          description: Release description
+        isMandatory:
+          type: boolean
+          default: false
+          description: Whether the release is mandatory
+        rollout:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 100
+          description: Rollout percentage
+        packageFile:
+          type: string
+          format: binary
+          description: Release bundle file
+      required:
+        - appVersion
+        - packageFile
+
+    PromoteRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          description: Label of the release to promote
+        description:
+          type: string
+          description: New description for the promoted release
+        isMandatory:
+          type: boolean
+          description: Whether the promoted release is mandatory
+        isDisabled:
+          type: boolean
+          description: Whether the promoted release is disabled
+        rollout:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Rollout percentage for the promoted release
+
+    DeploymentMetrics:
+      type: object
+      properties:
+        active:
+          type: integer
+          description: Number of active users
+        downloaded:
+          type: integer
+          description: Number of downloads
+        failed:
+          type: integer
+          description: Number of failed downloads
+        installed:
+          type: integer
+          description: Number of successful installations
+      required:
+        - active
+        - downloaded
+        - failed
+        - installed
+
+    CollaboratorPermissions:
+      type: object
+      properties:
+        permission:
+          type: string
+          enum:
+            - Owner
+            - Collaborator
+          description: Permission level
+        isCurrentAccount:
+          type: boolean
+          description: Whether this is the current user's account
+      required:
+        - permission
+        - isCurrentAccount
+
+tags:
+  - name: Authentication
+    description: User authentication and access key management
+  - name: Apps
+    description: Application management operations
+  - name: Deployments
+    description: Deployment environment management
+  - name: Releases
+    description: Release and bundle management
+  - name: Metrics
+    description: Analytics and metrics
+  - name: Collaborators
+    description: Team collaboration and permissions 
