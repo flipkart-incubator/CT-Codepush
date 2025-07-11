@@ -397,7 +397,7 @@ See the [deployment history](src/pages/DeploymentHistory.tsx) page within the ap
         </a>
         <br /> 
         <sub>
-        <a href="https://www.linkedin.com/in/om-prakash-tiwari-3ba87227b" title="Twitter"  font-size="8px">LinkedIn
+        <a href="https://www.linkedin.com/in/om-prakash-tiwari-3ba8727b" title="Twitter"  font-size="8px">LinkedIn
         </a>  
         </sub>
       </th>
