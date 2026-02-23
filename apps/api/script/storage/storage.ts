@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -89,6 +90,7 @@ export interface PackageHashToBlobInfoMap {
 export interface Package {
   appVersion: string;
   blobUrl: string;
+  patchBlobUrl?: string;
   description: string;
   diffPackageMap?: PackageHashToBlobInfoMap;
   isDisabled: boolean;
@@ -159,7 +161,8 @@ export interface Storage {
   getPackageHistory(accountId: string, appId: string, deploymentId: string): Promise<Package[]>;
   updatePackageHistory(accountId: string, appId: string, deploymentId: string, history: Package[]): Promise<void>;
 
-  addBlob(blobId: string, addstream: stream.Readable, streamLength: number): Promise<string>;
+  addBlob(blobId: string, stream: stream.Readable, streamLength: number): Promise<string>;
+  addPatchBlob(patchBlobId: string, patch: string): Promise<string>;
   getBlobUrl(blobId: string): Promise<string>;
   removeBlob(blobId: string): Promise<void>;
 

@@ -62,6 +62,8 @@ export interface UpdateCheckResponse extends PackageInfo {
   packageSize?: number;
   shouldRunBinaryVersion?: boolean;
   updateAppVersion?: boolean;
+  patchDownloadURL?: string;
+  applyPatch?: boolean;
 }
 
 /*out*/

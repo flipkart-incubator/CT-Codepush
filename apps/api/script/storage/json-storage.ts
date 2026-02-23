@@ -549,6 +549,12 @@ export class JsonStorage implements storage.Storage {
     });
   }
 
+  public addPatchBlob(patchBlobId: string, patch: string): Promise<string> {
+    this.blobs[patchBlobId] = patch;
+    this.saveStateAsync();
+    return q(patchBlobId);
+  }
+
   public getBlobUrl(blobId: string): Promise<string> {
     return this.getBlobServer().then((server: http.Server) => {
       return server.address() + "/" + blobId;

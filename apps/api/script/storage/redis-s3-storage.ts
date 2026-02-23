@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -11,11 +12,10 @@ import * as storage from "./storage";
 
 import clone = storage.clone;
 import Promise = q.Promise;
-import { isPrototypePollutionKey, getAccessSecret } from "./storage";
+import { isPrototypePollutionKey } from "./storage";
 import path = require("path");
 import Redis from "ioredis";
 import { Storage } from "@google-cloud/storage";
-import { gcsstorage } from "./gcsStorage";
 
 function merge(original: any, updates: any): void {
   for (const property in updates) {
@@ -572,17 +572,6 @@ export class RedisS3Storage implements storage.Storage {
       },
     });
     return Promise((resolve, reject) => {
-      //   stream
-      //     .pipe(blobStream)
-      //     .on("finish", () => {
-      //       const publicUrl = `https://storage.cloud.google.com/ct-code-push/${blobId}`;
-      //       this.blobs[blobId] = publicUrl;
-      //       return this.saveStateAsync().then(() => blobId);
-      //     })
-      //     .on("error", (err) => {
-      //       reject(err); // Reject on error
-      //     });
-      // });
       let uploadedLength = 0;
       stream.on('data', (chunk) => {
         uploadedLength += chunk.length;
@@ -606,6 +595,31 @@ export class RedisS3Storage implements storage.Storage {
         .on('error', (err) => {
           reject(err); // Reject on error
         });
+    });
+  }
+
+  public addPatchBlob(patchBlobId: string, patch: string): Promise<string> {
+    const file = this.googleBucket.file(patchBlobId);
+    const streamLength = Buffer.byteLength(patch, "utf8");
+    const blobStream = file.createWriteStream({
+      resumable: false,
+      contentType: "application/octet-stream",
+      metadata: {
+        contentLength: streamLength,
+      },
+    });
+    const readable = stream.Readable.from([patch], { encoding: "utf8" });
+    return q.Promise<string>((resolve, reject) => {
+      readable
+        .pipe(blobStream)
+        .on("finish", () => {
+          const publicUrl = `https://ui2.cltpstatic.com/ct-code-push/${patchBlobId}`;
+          this.blobs[patchBlobId] = publicUrl;
+          this.saveStateAsync()
+            .then(() => resolve(patchBlobId))
+            .catch(reject);
+        })
+        .on("error", reject);
     });
   }
 

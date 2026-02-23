@@ -13,6 +13,8 @@ import * as errorUtils from "../utils/rest-error-handling";
 import { Request, Response, Router } from "express";
 import * as fs from "fs";
 import * as hashUtils from "../utils/hash-utils";
+import * as os from "os";
+import * as path from "path";
 import * as q from "q";
 import * as redis from "../redis-manager";
 import * as restTypes from "../types/rest-definitions";
@@ -30,6 +32,8 @@ import tryJSON = require("try-json");
 import rateLimit from "express-rate-limit";
 import { isPrototypePollutionKey } from "../storage/storage";
 import { IRedisManager } from "../redis-manager";
+import request = require("superagent");
+import { createPatch } from "../utils/patch-utils";
 
 const DEFAULT_ACCESS_KEY_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days
 const ACCESS_KEY_MASKING_STRING = "(hidden)";
@@ -798,6 +802,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
       let deploymentToReleaseTo: storageTypes.Deployment;
       let storagePackage: storageTypes.Package;
       let lastPackageHashWithSameAppVersion: string;
+      let lastPackageFileContent: string | null = null;
       let newManifest: PackageManifest;
 
       nameResolver
@@ -821,6 +826,13 @@ export function getManagementRouter(config: ManagementConfig): Router {
         })
         .then((history: storageTypes.Package[]) => {
           lastPackageHashWithSameAppVersion = getLastPackageHashWithSameAppVersion(history, restPackage.appVersion);
+          const lastPackageWithSameAppVersion: storageTypes.Package = getLastPackageWithSameAppVersion(history, restPackage.appVersion);
+          if (lastPackageWithSameAppVersion && lastPackageWithSameAppVersion.blobUrl) {
+            return downloadToTempFile(lastPackageWithSameAppVersion.blobUrl).then((tempPath: string) => {
+              lastPackageFileContent = tempPath;
+              return hashUtils.generatePackageManifestFromZip(filePath);
+            });
+          }
           return hashUtils.generatePackageManifestFromZip(filePath);
         })
         .then((manifest?: PackageManifest) => {
@@ -873,6 +885,34 @@ export function getManagementRouter(config: ManagementConfig): Router {
           if (manifestBlobUrl) {
             storagePackage.manifestBlobUrl = manifestBlobUrl;
           }
+          return q(<string>null);
+        })
+        .then(() => {
+          // create patch string
+          if (lastPackageFileContent && !newManifest) {
+            return createPatch(`${security.generateSecureKey(accountId)}-patch`,lastPackageFileContent, filePath);
+          }
+          return q(<string>null);
+        })
+        .then((patch?: string) => {
+          if (patch) {
+            return storage.addPatchBlob(`${security.generateSecureKey(accountId)}-patch`, patch);
+          }
+          return q(<string>null);
+        })
+        .then((patchBlobId?: string) => {
+          if (patchBlobId) {
+            return storage.getBlobUrl(patchBlobId);
+          }
+          return q(<string>null);
+        })
+        .then((patchBlobUrl?: string) => {
+          if (patchBlobUrl) {
+            storagePackage.patchBlobUrl = patchBlobUrl;
+          }
+          return q(<string>null);
+        })
+        .then(() => {
 
           storagePackage.releaseMethod = storageTypes.ReleaseMethod.Upload;
           storagePackage.uploadTime = new Date().getTime();
@@ -895,6 +935,13 @@ export function getManagementRouter(config: ManagementConfig): Router {
               errorUtils.sendUnknownError(res, err, next);
             }
           });
+          if (lastPackageFileContent) {
+            fs.unlink(lastPackageFileContent, (err: NodeJS.ErrnoException): void => {
+              if (err) {
+                errorUtils.sendUnknownError(res, err, next);
+              }
+            });
+          }
         })
         .catch((error: error.CodePushError) => errorUtils.restErrorHandler(res, error, next))
         .done();
@@ -1226,7 +1273,7 @@ export function getManagementRouter(config: ManagementConfig): Router {
     return null;
   }
 
-  function getLastPackageHashWithSameAppVersion(history: storageTypes.Package[], appVersion: string): string {
+  function getLastPackageWithSameAppVersion(history: storageTypes.Package[], appVersion: string): storageTypes.Package {
     if (!history || !history.length) {
       return null;
     }
@@ -1237,17 +1284,44 @@ export function getManagementRouter(config: ManagementConfig): Router {
       const oldAppVersion: string = history[lastPackageIndex].appVersion;
       const oldRange: string = semver.validRange(oldAppVersion);
       const newRange: string = semver.validRange(appVersion);
-      return oldRange === newRange ? history[lastPackageIndex].packageHash : null;
+      return oldRange === newRange ? history[lastPackageIndex] : null;
     } else {
       // appVersion is not a range
       for (let i = lastPackageIndex; i >= 0; i--) {
         if (semver.satisfies(appVersion, history[i].appVersion)) {
-          return history[i].packageHash;
+          return history[i];
         }
       }
     }
 
     return null;
+  }
+
+  function getLastPackageHashWithSameAppVersion(history: storageTypes.Package[], appVersion: string): string {
+    const pkg: storageTypes.Package = getLastPackageWithSameAppVersion(history, appVersion);
+    return pkg ? pkg.packageHash : null;
+  }
+
+  function downloadToTempFile(url: string): Promise<string> {
+    return q.Promise<string>((resolve: (value: string) => void, reject: (reason: any) => void): void => {
+      const tempFilePath: string = path.join(os.tmpdir(), `lastPackage_${Date.now()}_${Math.random().toString(36).slice(2)}`);
+      const writeStream: stream.Writable = fs.createWriteStream(tempFilePath);
+      const req: request.Request = request.get(url.replace("10.0.2.2", "localhost"));
+
+      req.on("error", (err: any) => {
+        writeStream.destroy();
+        fs.unlink(tempFilePath, () => {});
+        reject(err);
+      });
+      writeStream.on("error", (err: NodeJS.ErrnoException) => {
+        req.destroy();
+        fs.unlink(tempFilePath, () => {});
+        reject(err);
+      });
+      req.pipe(writeStream).on("finish", () => {
+        writeStream.end(() => resolve(tempFilePath));
+      });
+    });
   }
 
   function addDiffInfoForPackage(

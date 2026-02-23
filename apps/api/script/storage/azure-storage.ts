@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -705,6 +706,17 @@ export class AzureStorage implements storage.Storage {
       .catch(AzureStorage.azureErrorHandler);
   }
 
+  public addPatchBlob(patchBlobId: string, patch: string): q.Promise<string> {
+    return this._setupPromise
+      .then(() => {
+        return this._blobService.getContainerClient(AzureStorage.TABLE_NAME).uploadBlockBlob(patchBlobId, patch, patch.length);
+      })
+      .then(() => {
+        return patchBlobId;
+      })
+      .catch(AzureStorage.azureErrorHandler);
+  }
+
   public getBlobUrl(blobId: string): q.Promise<string> {
     return this._setupPromise
       .then(() => {
@@ -916,7 +928,7 @@ export class AzureStorage implements storage.Storage {
         this._blobService = blobServiceClient;
       })
       .catch((error) => {
-        if (error.code == "ContainerAlreadyExists") {
+        if (error.code === "ContainerAlreadyExists") {
           this._tableClient = tableClient;
           this._blobService = blobServiceClient;
         } else {
@@ -1326,7 +1338,7 @@ export class AzureStorage implements storage.Storage {
       errorMessage = azureError.message;
     }
 
-    if (overrideMessage && overrideCondition == errorCodeRaw) {
+    if (overrideMessage && overrideCondition === errorCodeRaw) {
       errorMessage = overrideValue;
     }
 

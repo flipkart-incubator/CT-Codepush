@@ -118,6 +118,11 @@ function getUpdatePackage(packageHistory: Package[], request: UpdateCheckRequest
     updateDetails.packageSize = latestSatisfyingEnabledPackage.size;
   }
 
+  if (latestSatisfyingEnabledPackage.patchBlobUrl) {  
+    updateDetails.patchDownloadURL = latestSatisfyingEnabledPackage.patchBlobUrl;
+    updateDetails.applyPatch = true;
+  }
+
   updateDetails.description = latestSatisfyingEnabledPackage.description;
   updateDetails.isMandatory = shouldMakeUpdateMandatory || latestSatisfyingEnabledPackage.isMandatory;
   updateDetails.isAvailable = true;
