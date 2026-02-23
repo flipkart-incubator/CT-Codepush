@@ -9,13 +9,17 @@ We announced that Visual Studio App Center will be retired on March 31, 2025. Yo
 
 ### CodePush Server
 
-The CodePush server, located in the `api` subdirectory, allows developers to build, deploy and manage CodePush updates themselves.
-For detailed information about the CodePush server, including installation instructions and usage details, please refer to the [CodePush Server README](./api/README.md).
+This repository is a **Yarn workspace** monorepo:
 
+- **apps/web** – CodePush Web UI (Vite + React)
+- **apps/api** – CodePush server API (includes `swagger.yaml`)
+- **apps/cli** – CodePush CLI
+- **packages/code-push** – Shared CodePush utilities
+- **packages/react-native-code-push** – React Native CodePush client SDK
 
-### CodePush CLI
+The CodePush server is in `apps/api`. For installation and usage, see [CodePush Server README](./apps/api/README.md).
 
-The CodePush CLI, located in `cli` subdirectory, is a command-line tool that allows developers to interact with the CodePush server. For detailed information about the CodePush CLI, including installation instructions and usage details, please refer to the [CodePush CLI README](./cli/README.md).
+The CodePush CLI is in `apps/cli`. See [CodePush CLI README](./apps/cli/README.md).
 
 
 ## Contributing
@@ -59,26 +63,27 @@ A modern web interface for managing CodePush applications, deployments, access k
 
 ## Setup
 
-1. Clone the repository:
+1. Clone the repository and install dependencies (from repo root):
 ```bash
 git clone <repository-url>
-cd codepush-web-ui
+cd CT-Codepush
+yarn install
 ```
 
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create a `.env` file in the root directory:
+2. Create a `.env` file in `apps/web`:
 ```env
 VITE_API_URL=https://${domain}
 ```
 
-4. Start the development server:
+3. Start the web UI:
 ```bash
-npm run dev
+yarn dev:web
+# or: yarn workspace web dev
 ```
+
+4. From root you can also run:
+- `yarn start:api` – start the API server
+- `yarn cli` – run the CodePush CLI
 
 The application will start on port 3000 and will proxy API requests to ${domain}.
 

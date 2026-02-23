@@ -188,7 +188,7 @@ If you get CORS errors when testing API endpoints:
 
 **Update API CORS Configuration:**
 ```javascript
-// In api/script/server.ts, add:
+// In apps/api/script/server.ts, add:
 app.use(cors({
   origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
   credentials: true

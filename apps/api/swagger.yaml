@@ -1,0 +1,1145 @@
+openapi: 3.0.3
+info:
+  title: CodePush Dashboard API
+  description: |
+    A comprehensive REST API for Microsoft CodePush Dashboard that provides functionality for managing mobile app deployments, releases, and team collaboration.
+    
+    ## Authentication
+    This API uses Bearer token authentication. Include your access key in the Authorization header:
+    ```
+    Authorization: Bearer YOUR_ACCESS_KEY
+    ```
+    
+    ## Rate Limiting
+    API requests are rate limited to prevent abuse. Check response headers for rate limit information.
+    
+    ## Error Handling
+    The API returns standard HTTP status codes along with detailed error messages in JSON format.
+  version: 1.0.0
+  contact:
+    name: CodePush Dashboard Support
+    url: https://github.com/microsoft/code-push
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: ${domain}
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Authentication
+    description: Authentication and access key management
+  - name: Apps
+    description: Application management operations
+  - name: Deployments
+    description: Deployment environment management
+  - name: Releases
+    description: Release and bundle management
+  - name: Collaborators
+    description: Team collaboration and access control
+  - name: Metrics
+    description: Analytics and deployment metrics
+
+paths:
+  # Authentication endpoints
+  /auth/accesskey:
+    get:
+      tags:
+        - Authentication
+      summary: Get access key after OAuth
+      description: Retrieve access key after successful OAuth authentication
+      parameters:
+        - name: source
+          in: query
+          schema:
+            type: string
+            default: web
+          description: Source of the request
+        - name: redirect
+          in: query
+          schema:
+            type: string
+            default: /code-push/dashboard
+          description: Redirect URL after authentication
+      responses:
+        '200':
+          description: Access key retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessKeyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /account:
+    get:
+      tags:
+        - Authentication
+      summary: Get user profile
+      description: Retrieve the current user's account information
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  account:
+                    $ref: '#/components/schemas/UserAccount'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /accessKeys/{accessKey}:
+    delete:
+      tags:
+        - Authentication
+      summary: Delete access key
+      description: Remove an access key from the system
+      parameters:
+        - name: accessKey
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The access key to delete
+      responses:
+        '204':
+          description: Access key deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # App management endpoints
+  /apps:
+    get:
+      tags:
+        - Apps
+      summary: List all applications
+      description: Retrieve all applications accessible to the current user
+      responses:
+        '200':
+          description: Applications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  apps:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/App'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Apps
+      summary: Create new application
+      description: Create a new CodePush application
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppRequest'
+      responses:
+        '201':
+          description: Application created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created application
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  app:
+                    $ref: '#/components/schemas/App'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}:
+    get:
+      tags:
+        - Apps
+      summary: Get application details
+      description: Retrieve detailed information about a specific application
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+      responses:
+        '200':
+          description: Application details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  app:
+                    $ref: '#/components/schemas/AppDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags:
+        - Apps
+      summary: Update application
+      description: Update application properties (requires owner permissions)
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAppRequest'
+      responses:
+        '200':
+          description: Application updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  app:
+                    $ref: '#/components/schemas/App'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Apps
+      summary: Delete application
+      description: Permanently delete an application and all its deployments (requires owner permissions)
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+      responses:
+        '204':
+          description: Application deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/transfer/{email}:
+    post:
+      tags:
+        - Apps
+      summary: Transfer application ownership
+      description: Transfer ownership of an application to another user (requires owner permissions)
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          description: Email address of the new owner
+      responses:
+        '200':
+          description: Application ownership transferred successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Deployment management endpoints
+  /apps/{appName}/deployments:
+    get:
+      tags:
+        - Deployments
+      summary: List deployments
+      description: Retrieve all deployments for a specific application
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+      responses:
+        '200':
+          description: Deployments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Deployment'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Deployments
+      summary: Create deployment
+      description: Create a new deployment environment for an application
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDeploymentRequest'
+      responses:
+        '201':
+          description: Deployment created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created deployment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment:
+                    $ref: '#/components/schemas/Deployment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/deployments/{deploymentName}:
+    get:
+      tags:
+        - Deployments
+      summary: Get deployment details
+      description: Retrieve detailed information about a specific deployment
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+      responses:
+        '200':
+          description: Deployment details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deployment:
+                    $ref: '#/components/schemas/DeploymentDetails'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Deployments
+      summary: Delete deployment
+      description: Permanently delete a deployment environment (requires owner permissions)
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+      responses:
+        '204':
+          description: Deployment deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/deployments/{deploymentName}/metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Get deployment metrics
+      description: Retrieve analytics and usage metrics for a deployment
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+      responses:
+        '200':
+          description: Deployment metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  metrics:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/DeploymentMetrics'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/deployments/{deploymentName}/history:
+    get:
+      tags:
+        - Releases
+      summary: Get deployment history
+      description: Retrieve the release history for a deployment
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+      responses:
+        '200':
+          description: Deployment history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Package'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Releases
+      summary: Clear deployment history
+      description: Delete all release history for a deployment (requires owner permissions)
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+      responses:
+        '204':
+          description: Deployment history cleared successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/deployments/{deploymentName}/release:
+    post:
+      tags:
+        - Releases
+      summary: Create release
+      description: Upload a new release/bundle to a deployment
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                packageInfo:
+                  type: string
+                  description: JSON string containing package information
+                package:
+                  type: string
+                  format: binary
+                  description: The app bundle file
+              required:
+                - packageInfo
+                - package
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReleaseRequest'
+      responses:
+        '201':
+          description: Release created successfully
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the created release
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  package:
+                    $ref: '#/components/schemas/Package'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/deployments/{deploymentName}/rollback:
+    post:
+      tags:
+        - Releases
+      summary: Rollback deployment
+      description: Rollback a deployment to the previous release
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+      responses:
+        '200':
+          description: Deployment rolled back successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  package:
+                    $ref: '#/components/schemas/Package'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Rollback not possible (no previous version or compatibility issues)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/deployments/{deploymentName}/rollback/{targetRelease}:
+    post:
+      tags:
+        - Releases
+      summary: Rollback to specific release
+      description: Rollback a deployment to a specific release version
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - $ref: '#/components/parameters/DeploymentName'
+        - name: targetRelease
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Target release label to rollback to
+      responses:
+        '200':
+          description: Deployment rolled back successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  package:
+                    $ref: '#/components/schemas/Package'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Rollback not possible (target version not found or compatibility issues)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/deployments/{sourceDeploymentName}/promote/{targetDeploymentName}:
+    post:
+      tags:
+        - Releases
+      summary: Promote release
+      description: Promote a release from one deployment to another
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - name: sourceDeploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Source deployment name
+        - name: targetDeploymentName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Target deployment name
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromoteReleaseRequest'
+      responses:
+        '201':
+          description: Release promoted successfully
+          headers:
+            Location:
+              schema:
+                type: string
+              description: URL of the promoted release
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  package:
+                    $ref: '#/components/schemas/Package'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # Collaboration endpoints
+  /apps/{appName}/collaborators:
+    get:
+      tags:
+        - Collaborators
+      summary: List collaborators
+      description: Retrieve all collaborators for an application
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+      responses:
+        '200':
+          description: Collaborators retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collaborators:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/CollaboratorInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /apps/{appName}/collaborators/{email}:
+    post:
+      tags:
+        - Collaborators
+      summary: Add collaborator
+      description: Add a new collaborator to an application (requires owner permissions)
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          description: Email address of the collaborator to add
+      responses:
+        '201':
+          description: Collaborator added successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Collaborator already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Collaborators
+      summary: Remove collaborator
+      description: Remove a collaborator from an application (requires owner permissions or self-removal)
+      parameters:
+        - $ref: '#/components/parameters/AppName'
+        - name: email
+          in: path
+          required: true
+          schema:
+            type: string
+            format: email
+          description: Email address of the collaborator to remove
+      responses:
+        '204':
+          description: Collaborator removed successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Bearer token authentication using CodePush access keys
+
+  parameters:
+    AppName:
+      name: appName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of the application
+      example: MyApp
+
+    DeploymentName:
+      name: deploymentName
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of the deployment
+      example: Production
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters or request body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Conflict:
+      description: Conflict - resource already exists or constraint violation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        details:
+          type: object
+          description: Additional error details
+      required:
+        - message
+
+    AccessKeyResponse:
+      type: object
+      properties:
+        accessKey:
+          type: string
+          description: The access key for API authentication
+        isNewAccount:
+          type: boolean
+          description: Whether this is a new account
+        redirectUrl:
+          type: string
+          description: URL to redirect to after authentication
+      required:
+        - accessKey
+        - redirectUrl
+
+    UserAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          description: User account ID
+        email:
+          type: string
+          format: email
+          description: User email address
+        name:
+          type: string
+          description: User display name
+      required:
+        - id
+        - email
+
+    App:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Application name
+        description:
+          type: string
+          description: Application description
+        deployments:
+          type: array
+          items:
+            type: string
+          description: List of deployment names
+        collaborators:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/CollaboratorInfo'
+          description: Map of collaborators
+      required:
+        - name
+
+    AppDetails:
+      allOf:
+        - $ref: '#/components/schemas/App'
+        - type: object
+          properties:
+            createdTime:
+              type: integer
+              format: int64
+              description: Creation timestamp
+            id:
+              type: string
+              description: Internal app ID
+
+    CreateAppRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Application name
+          minLength: 1
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9\-_]+$'
+        description:
+          type: string
+          description: Application description
+          maxLength: 200
+      required:
+        - name
+      example:
+        name: MyMobileApp
+        description: My awesome mobile application
+
+    UpdateAppRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: New application name
+          minLength: 1
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9\-_]+$'
+        description:
+          type: string
+          description: New application description
+          maxLength: 200
+      example:
+        name: MyUpdatedApp
+        description: Updated description
+
+    Deployment:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Deployment name
+        key:
+          type: string
+          description: Deployment key for client integration
+        package:
+          $ref: '#/components/schemas/Package'
+          description: Current package/release
+      required:
+        - name
+        - key
+
+    DeploymentDetails:
+      allOf:
+        - $ref: '#/components/schemas/Deployment'
+        - type: object
+          properties:
+            id:
+              type: string
+              description: Internal deployment ID
+            createdTime:
+              type: integer
+              format: int64
+              description: Creation timestamp
+
+    CreateDeploymentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Deployment name
+          minLength: 1
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9\-_]+$'
+      required:
+        - name
+      example:
+        name: Production
+
+    Package:
+      type: object
+      properties:
+        appVersion:
+          type: string
+          description: Target app version
+        description:
+          type: string
+          description: Release description
+        isDisabled:
+          type: boolean
+          description: Whether the package is disabled
+        isMandatory:
+          type: boolean
+          description: Whether the update is mandatory
+        label:
+          type: string
+          description: Release label/version
+        packageHash:
+          type: string
+          description: SHA-256 hash of the package
+        size:
+          type: integer
+          format: int64
+          description: Package size in bytes
+        uploadTime:
+          type: integer
+          format: int64
+          description: Upload timestamp
+        releaseMethod:
+          type: string
+          description: How the release was created
+        releasedBy:
+          type: string
+          description: Who released the package
+        rollout:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: Rollout percentage
+        blobUrl:
+          type: string
+          description: Download URL for the package
+        metrics:
+          $ref: '#/components/schemas/DeploymentMetrics'
+      required:
+        - appVersion
+        - label
+        - packageHash
+        - size
+        - uploadTime
+
+    CreateReleaseRequest:
+      type: object
+      properties:
+        packageInfo:
+          type: object
+          properties:
+            appVersion:
+              type: string
+              description: Target app version
+            description:
+              type: string
+              description: Release description
+            isMandatory:
+              type: boolean
+              default: false
+              description: Whether the update is mandatory
+            rollout:
+              type: integer
+              minimum: 1
+              maximum: 100
+              default: 100
+              description: Rollout percentage
+          required:
+            - appVersion
+        bundleUrl:
+          type: string
+          format: uri
+          description: URL to download the bundle from (alternative to file upload)
+      example:
+        packageInfo:
+          appVersion: "1.0.0"
+          description: "Bug fixes and performance improvements"
+          isMandatory: false
+          rollout: 100
+
+    PromoteReleaseRequest:
+      type: object
+      properties:
+        packageInfo:
+          type: object
+          properties:
+            label:
+              type: string
+              description: Source release label to promote
+            description:
+              type: string
+              description: New description for the promoted release
+            isMandatory:
+              type: boolean
+              description: Whether the promoted update is mandatory
+            isDisabled:
+              type: boolean
+              description: Whether the promoted package is disabled
+            rollout:
+              type: integer
+              minimum: 1
+              maximum: 100
+              description: Rollout percentage for the promoted release
+      example:
+        packageInfo:
+          label: "v1.2.0"
+          description: "Promoted from staging"
+          isMandatory: false
+          rollout: 25
+
+    DeploymentMetrics:
+      type: object
+      properties:
+        active:
+          type: integer
+          description: Number of active installations
+        downloaded:
+          type: integer
+          description: Number of downloads
+        failed:
+          type: integer
+          description: Number of failed installations
+        installed:
+          type: integer
+          description: Number of successful installations
+      required:
+        - active
+        - downloaded
+        - failed
+        - installed
+
+    CollaboratorInfo:
+      type: object
+      properties:
+        permission:
+          type: string
+          enum: [Owner, Collaborator]
+          description: Permission level
+        isCurrentAccount:
+          type: boolean
+          description: Whether this is the current user's account
+      required:
+        - permission
+        - isCurrentAccount
+
+externalDocs:
+  description: CodePush Documentation
+  url: https://docs.microsoft.com/en-us/appcenter/distribution/codepush/ 

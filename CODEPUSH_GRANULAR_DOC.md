@@ -347,9 +347,9 @@ src/
 
 ## 7. Further Reading
 
-- [cli/README.md](cli/README.md): Full CLI command reference and examples.
-- [api/README.md](api/README.md): Server setup, deployment, and environment details.
-- [api/ENVIRONMENT.md](api/ENVIRONMENT.md): All environment variables and their usage.
+- [apps/cli/README.md](apps/cli/README.md): Full CLI command reference and examples.
+- [apps/api/README.md](apps/api/README.md): Server setup, deployment, and environment details.
+- [apps/api/ENVIRONMENT.md](apps/api/ENVIRONMENT.md): All environment variables and their usage.
 - [src/](src/): Explore React components and pages for UI customization.
 
 ---
