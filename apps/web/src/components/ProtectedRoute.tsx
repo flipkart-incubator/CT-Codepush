@@ -9,6 +9,11 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
+  const isAuthless = import.meta.env.VITE_AUTHLESS === 'true';
+
+  if (isAuthless) {
+    return <>{children}</>;
+  }
 
   if (isLoading) {
     return (

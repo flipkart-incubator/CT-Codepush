@@ -35,6 +35,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (import.meta.env.VITE_AUTHLESS === 'true') {
+      setIsLoading(false);
+      return;
+    }
     checkAuthStatus();
   }, []);
 
