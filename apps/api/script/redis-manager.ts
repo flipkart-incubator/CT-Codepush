@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 import * as q from "q";
@@ -54,6 +55,33 @@ export module Utilities {
   }
 }
 
+/** Interface for Redis-like cache/metrics (implemented by RedisManager and InMemoryRedisManager). */
+export interface IRedisManager {
+  readonly isEnabled: boolean;
+  checkHealth(): Promise<void>;
+  getCachedResponse(expiryKey: string, url: string): Promise<CacheableResponse>;
+  setCachedResponse(expiryKey: string, url: string, response: CacheableResponse): Promise<void>;
+  incrementLabelStatusCount(deploymentKey: string, label: string, status: string): Promise<void>;
+  clearMetricsForDeploymentKey(deploymentKey: string): Promise<void>;
+  getMetricsWithDeploymentKey(deploymentKey: string): Promise<DeploymentMetrics>;
+  recordUpdate(
+    currentDeploymentKey: string,
+    currentLabel: string,
+    previousDeploymentKey?: string,
+    previousLabel?: string
+  ): Promise<void>;
+  removeDeploymentKeyClientActiveLabel(deploymentKey: string, clientUniqueId: string): Promise<void>;
+  invalidateCache(expiryKey: string): Promise<void>;
+  close(): Promise<void>;
+  getCurrentActiveLabel(deploymentKey: string, clientUniqueId: string): Promise<string>;
+  updateActiveAppForClient(
+    deploymentKey: string,
+    clientUniqueId: string,
+    toLabel: string,
+    fromLabel?: string
+  ): Promise<void>;
+}
+
 class PromisifiedRedisClient {
   // An incomplete set of promisified versions of the original redis methods
   // eslint-disable-next-line no-unused-vars
@@ -108,7 +136,7 @@ class PromisifiedRedisClient {
   }
 }
 
-export class RedisManager {
+export class RedisManager implements IRedisManager {
   private static DEFAULT_EXPIRY: number = 3600; // one hour, specified in seconds
   private static METRICS_DB: number = 1;
 

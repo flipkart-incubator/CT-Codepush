@@ -45,7 +45,8 @@ export class JsonStorage implements storage.Storage {
   private static CollaboratorNotFound: string = "The specified e-mail address doesn't represent a registered user";
   private _blobServerPromise: Promise<http.Server>;
 
-  constructor(public disablePersistence: boolean = true) {
+  // eslint-disable-next-line no-unused-vars
+  constructor(public disablePersistence: boolean = true, public devMode: boolean = false) {
     this.loadStateAsync(); // Attempts to load real data if any exists
   }
 
@@ -113,6 +114,9 @@ export class JsonStorage implements storage.Storage {
   }
 
   public checkHealth(): Promise<void> {
+    if (this.devMode) {
+      return q.resolve<void>();
+    }
     return q.reject<void>("Should not be running JSON storage in production");
   }
 
@@ -269,6 +273,7 @@ export class JsonStorage implements storage.Storage {
     });
   }
 
+  // eslint-disable-next-line no-unused-vars
   public updateApp(accountId: string, app: storage.App, ensureIsOwner: boolean = true): Promise<void> {
     app = clone(app); // pass by value
 
@@ -528,8 +533,10 @@ export class JsonStorage implements storage.Storage {
     return q(<void>null);
   }
 
+  // eslint-disable-next-line no-unused-vars
   public addBlob(blobId: string, stream: stream.Readable, streamLength: number): Promise<string> {
     this.blobs[blobId] = "";
+    // eslint-disable-next-line no-unused-vars
     return q.Promise<string>((resolve: (blobId: string) => void) => {
       stream
         .on("data", (data: string) => {
@@ -727,6 +734,7 @@ export class JsonStorage implements storage.Storage {
     if (!this._blobServerPromise) {
       const app: express.Express = express();
 
+      // eslint-disable-next-line no-unused-vars
       app.get("/:blobId", (req: express.Request, res: express.Response, next: (err?: Error) => void): any => {
         const blobId: string = req.params.blobId;
         if (this.blobs[blobId]) {

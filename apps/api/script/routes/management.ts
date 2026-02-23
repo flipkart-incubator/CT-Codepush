@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -28,13 +29,14 @@ import Promise = q.Promise;
 import tryJSON = require("try-json");
 import rateLimit from "express-rate-limit";
 import { isPrototypePollutionKey } from "../storage/storage";
+import { IRedisManager } from "../redis-manager";
 
 const DEFAULT_ACCESS_KEY_EXPIRY = 1000 * 60 * 60 * 24 * 60; // 60 days
 const ACCESS_KEY_MASKING_STRING = "(hidden)";
 
 export interface ManagementConfig {
   storage: storageTypes.Storage;
-  redisManager: redis.RedisManager;
+  redisManager: IRedisManager;
 }
 
 // A template string tag function that URL encodes the substituted values
@@ -51,7 +53,7 @@ function urlEncode(strings: string[], ...values: string[]): string {
 }
 
 export function getManagementRouter(config: ManagementConfig): Router {
-  const redisManager: redis.RedisManager = config.redisManager;
+  const redisManager: IRedisManager = config.redisManager;
   const storage: storageTypes.Storage = config.storage;
   const packageDiffing = new PackageDiffer(storage, parseInt(process.env.DIFF_PACKAGE_COUNT) || 5);
   const router: Router = Router();

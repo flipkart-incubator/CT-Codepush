@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
@@ -18,12 +19,13 @@ import * as q from "q";
 import * as queryString from "querystring";
 import * as URL from "url";
 import Promise = q.Promise;
+import { IRedisManager } from "../redis-manager";
 
 const METRICS_BREAKING_VERSION = "1.5.2-beta";
 
 export interface AcquisitionConfig {
   storage: storageTypes.Storage;
-  redisManager: redis.RedisManager;
+  redisManager: IRedisManager;
 }
 
 function getUrlKey(originalUrl: string): string {
@@ -115,7 +117,7 @@ function createResponseUsingStorage(
 
 export function getHealthRouter(config: AcquisitionConfig): express.Router {
   const storage: storageTypes.Storage = config.storage;
-  const redisManager: redis.RedisManager = config.redisManager;
+  const redisManager: IRedisManager = config.redisManager;
   const router: express.Router = express.Router();
 
   router.get("/health", (req: express.Request, res: express.Response, next: (err?: any) => void): any => {
@@ -143,7 +145,7 @@ export function getHealthRouter(config: AcquisitionConfig): express.Router {
 
 export function getAcquisitionRouter(config: AcquisitionConfig): express.Router {
   const storage: storageTypes.Storage = config.storage;
-  const redisManager: redis.RedisManager = config.redisManager;
+  const redisManager: IRedisManager = config.redisManager;
   const router: express.Router = express.Router();
 
   const updateCheck = function (newApi: boolean) {

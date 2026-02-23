@@ -1,10 +1,12 @@
+/* eslint-disable no-unused-vars */
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 import * as api from "./api";
 import { fileUploadMiddleware } from "./file-upload-manager";
 import { RedisManager } from "./redis-manager";
-import { Storage } from "./storage/storage";
+import { InMemoryRedisManager } from "./in-memory-redis-manager";
+import { Storage, Account } from "./storage/storage";
 import { Response } from "express";
 
 import * as bodyParser from "body-parser";
@@ -13,12 +15,10 @@ const domain = require("express-domain-middleware");
 import * as express from "express";
 import * as q from "q";
 import { RedisS3Storage } from "./storage/redis-s3-storage";
+import { JsonStorage } from "./storage/json-storage";
+import { seedDevStorage, DEV_DEFAULT_ACCOUNT_EMAIL } from "./dev-seed";
 import * as cors from "cors";
 
-interface Secret {
-  id: string;
-  value: string;
-}
 
 function bodyParserErrorHandler(err: any, req: express.Request, res: express.Response, next: Function): void {
   if (err) {
@@ -33,14 +33,27 @@ function bodyParserErrorHandler(err: any, req: express.Request, res: express.Res
   }
 }
 
+function isDevelopmentMode(useJsonStorage?: boolean): boolean {
+  return process.env.NODE_ENV === "development" || useJsonStorage === true;
+}
+
 export function start(done: (err?: any, server?: express.Express, storage?: Storage) => void, useJsonStorage?: boolean): void {
   let storage: Storage;
 
+  const isDev = isDevelopmentMode(useJsonStorage);
+
   q<void>(null)
     .then(async () => {
-      storage = new RedisS3Storage();
+      if (isDev) {
+        storage = new JsonStorage(true, true); // disablePersistence (in-memory), devMode (checkHealth passes)
+      } else {
+        storage = new RedisS3Storage();
+      }
     })
-    .then(() => {
+    .then(() => (isDev ? seedDevStorage(storage) : q<void>(undefined)))
+    .then(() => (isDev ? storage.getAccountByEmail(DEV_DEFAULT_ACCOUNT_EMAIL) : q<Account | null>(null)))
+    .then((devAccount: Account | null) => {
+      const devAccountId: string = devAccount ? devAccount.id : "default";
       const app = express();
       
       // Set trust proxy early to ensure proper IP detection for rate limiting and other middleware
@@ -49,7 +62,7 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       app.use(cors());
       const auth = api.auth({ storage: storage });
       const appInsights = api.appInsights();
-      const redisManager = new RedisManager();
+      const redisManager = isDev ? new InMemoryRedisManager() : new RedisManager();
       // First, to wrap all requests and catch all exceptions.
       app.use(domain);
 
@@ -129,25 +142,20 @@ export function start(done: (err?: any, server?: express.Express, storage?: Stor
       }
 
       if (process.env.DISABLE_MANAGEMENT !== "true") {
-        if (process.env.DEBUG_DISABLE_AUTH === "true") {
+        if (isDev || process.env.DEBUG_DISABLE_AUTH === "true") {
           app.use((req, res, next) => {
-            let userId: string = "default";
-            if (process.env.DEBUG_USER_ID) {
-              userId = process.env.DEBUG_USER_ID;
-            } else {
-              console.log("No DEBUG_USER_ID environment variable configured. Using 'default' as user id");
-            }
-
+            const userId: string = process.env.DEBUG_USER_ID || devAccountId;
             req.user = {
               id: userId,
             };
 
             next();
           });
+          app.use(fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager })); 
         } else {
           app.use(auth.router());
+          app.use(auth.authenticate, fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
         }
-        app.use(auth.authenticate, fileUploadMiddleware, api.management({ storage: storage, redisManager: redisManager }));
       } else {
         app.use(auth.legacyRouter());
       }
