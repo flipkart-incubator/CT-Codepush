@@ -163,6 +163,19 @@ public class CodePushUpdateManager {
         File downloadFile = null;
         boolean isZip = false;
 
+        String patchDownloadUrlString = updatePackage.optString(CodePushConstants.PATCH_DOWNLOAD_URL_KEY, null); 
+        boolean applyPatch = updatePackage.optBoolean(CodePushConstants.APPLY_PATCH_KEY, false);
+
+        if (applyPatch) {
+            // Download the patch file
+            URL patchDownloadUrl = new URL(patchDownloadUrlString);
+            connection = (HttpURLConnection) (patchDownloadUrl.openConnection());
+            bin = new BufferedInputStream(connection.getInputStream());
+            File patchDownloadFile = new File(getCodePushPath(), CodePushConstants.PATCH_DOWNLOAD_FILE_NAME);
+            patchDownloadFile.delete();
+            fos = new FileOutputStream(patchDownloadFile);
+        }
+
         // Download the file while checking if it is a zip and notifying client of progress.
         try {
             URL downloadUrl = new URL(downloadUrlString);

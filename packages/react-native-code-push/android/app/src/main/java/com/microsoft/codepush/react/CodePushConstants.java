@@ -14,6 +14,8 @@ public class CodePushConstants {
     public static final String DOWNLOAD_FILE_NAME = "download.zip";
     public static final String DOWNLOAD_PROGRESS_EVENT_NAME = "CodePushDownloadProgress";
     public static final String DOWNLOAD_URL_KEY = "downloadUrl";
+    public static final String PATCH_DOWNLOAD_URL_KEY = "patchDownloadUrl";
+    public static final String APPLY_PATCH_KEY = "applyPatch";
     public static final String FAILED_UPDATES_KEY = "CODE_PUSH_FAILED_UPDATES";
     public static final String PACKAGE_FILE_NAME = "app.json";
     public static final String PACKAGE_HASH_KEY = "packageHash";
