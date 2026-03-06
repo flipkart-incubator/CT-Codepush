@@ -1,4 +1,4 @@
-package com.microsoft.codepush.react;
+package com.cleartrip.codepush.react;
 
 class CodePushUnknownException extends RuntimeException {
 

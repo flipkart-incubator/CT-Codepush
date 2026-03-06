@@ -1,4 +1,4 @@
-package com.microsoft.codepush.react;
+package com.cleartrip.codepush.react;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;

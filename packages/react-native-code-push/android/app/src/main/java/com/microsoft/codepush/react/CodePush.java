@@ -1,4 +1,4 @@
-package com.microsoft.codepush.react;
+package com.cleartrip.codepush.react;
 
 import android.content.Context;
 import android.content.pm.PackageInfo;

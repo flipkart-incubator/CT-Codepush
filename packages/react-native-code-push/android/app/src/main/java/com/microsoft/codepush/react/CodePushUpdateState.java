@@ -1,4 +1,4 @@
-package com.microsoft.codepush.react;
+package com.cleartrip.codepush.react;
 
 public enum CodePushUpdateState {
     RUNNING(0),
