@@ -1,11 +1,11 @@
-import { EventSubscription, NativeEventEmitter, NativeModule } from "react-native";
+import { EventSubscription, NativeEventEmitter } from "react-native";
 import { AcquisitionManager } from "./core/acquisition-sdk";
-import {
+import type {
   DownloadProgressCallback,
   INativeCodePush,
   LocalPackage,
   RemotePackage,
-} from "./type";
+} from "./index";
 
 const packageMixins = (NativeCodePush: INativeCodePush) => {
   const remote = (

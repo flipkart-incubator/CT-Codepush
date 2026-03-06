@@ -404,7 +404,7 @@ const DEFAULT_ROLLBACK_RETRY_OPTIONS = {
 /**
  * Indicates when you would like an installed update to actually be applied.
  */
-enum InstallMode {
+export enum InstallMode {
     /**
    * Indicates that you want to install the update and restart the app immediately.
    */
