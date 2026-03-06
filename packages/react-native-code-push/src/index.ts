@@ -384,14 +384,14 @@ export interface INativeCodePush extends NativeModule {
   clearPendingRestart: () => void;
   isFailedUpdate: (packageHash: string) => Promise<boolean>;
 
-  codePushInstallModeOnNextRestart: InstallMode;
-  codePushInstallModeImmediate: InstallMode;
-  codePushInstallModeOnNextResume: InstallMode;
-  codePushInstallModeOnNextSuspend: InstallMode;
+  codePushInstallModeOnNextRestart: number;
+  codePushInstallModeImmediate: number;
+  codePushInstallModeOnNextResume: number;
+  codePushInstallModeOnNextSuspend: number;
 
-  codePushUpdateStateRunning: UpdateState;
-  codePushUpdateStatePending: UpdateState;
-  codePushUpdateStateLatest: UpdateState;
+  codePushUpdateStateRunning: number;
+  codePushUpdateStatePending: number;
+  codePushUpdateStateLatest: number;
 };
 
 const NativeCodePush: INativeCodePush = NativeModules.CodePush;

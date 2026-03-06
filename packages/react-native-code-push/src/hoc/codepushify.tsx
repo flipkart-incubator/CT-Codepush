@@ -3,6 +3,7 @@ import { AppState } from "react-native";
 import { hoistStatics } from "hoist-non-react-statics";
 import CodePush, { CodePushOptions } from "..";
 
+
 export const codepushify = (options: CodePushOptions) => (RootComponent: React.ComponentType<any>) => {
     class CodePushComponent extends React.Component<any, any> {
     private rootComponentRef: React.RefObject<any>;

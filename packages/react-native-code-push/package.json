@@ -1,10 +1,56 @@
 {
-  "name": "react-native-code-push",
-  "version": "0.1.0",
+  "name": "@cleartrip/react-native-code-push",
+  "version": "0.1.2",
   "description": "React Native CodePush client SDK",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "private": true,
+  "main": "lib/commonjs/index",
+  "module": "lib/module/index",
+  "react-native": "src/index",
+  "source": "src/index",
+  "types": "lib/typescript/index",
+  "keywords": [
+    "react-native",
+    "code-push",
+    "codepush",
+    "react-native-code-push",
+    "react-native-codepush",
+    "react-native-codepush-client",
+    "react-native-codepush-client-sdk"
+  ],
+  "author": "ClearTrip",
+  "license": "MIT",
+  "homepage": "https://github.com/flipkart-incubator/CT-Codepush",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flipkart-incubator/CT-Codepush.git"
+  },
+  "files": [
+    "src",
+    "lib",
+    "ios",
+    "android",
+    "CodePush.podspec",
+    "security.md",
+    "README.md"
+  ],
+  "@react-native-community/bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      "commonjs",
+      "module",
+      [
+        "typescript",
+        {
+          "project": "./tsconfig.json"
+        }
+      ]
+    ]
+  },
+  "scripts": {
+    "build": "bob build",
+    "clean": "bob clean",
+    "prebuild": "bob clean && bob build"
+  },
   "peerDependencies": {
     "react": "*",
     "react-native": "*"
@@ -18,6 +64,7 @@
     "xcode": "3.0.1"
   },
   "devDependencies": {
+    "@react-native-community/bob": "^0.17.1",
     "@types/react": "^18.0.0",
     "@types/react-native": "^0.74.0",
     "react": "18.0.0",

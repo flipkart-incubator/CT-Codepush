@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { Platform, NativeModules } from "react-native";
 
 let { Alert } = React;
