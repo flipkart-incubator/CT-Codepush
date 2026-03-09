@@ -13,8 +13,12 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import name.fraser.neil.plaintext.diff_match_patch;
 
 public class CodePushUpdateManager {
 
@@ -163,17 +167,90 @@ public class CodePushUpdateManager {
         File downloadFile = null;
         boolean isZip = false;
 
-        String patchDownloadUrlString = updatePackage.optString(CodePushConstants.PATCH_DOWNLOAD_URL_KEY, null); 
+        String patchDownloadUrlString = updatePackage.optString(CodePushConstants.PATCH_DOWNLOAD_URL_KEY, null);
         boolean applyPatch = updatePackage.optBoolean(CodePushConstants.APPLY_PATCH_KEY, false);
 
         if (applyPatch) {
-            // Download the patch file
-            URL patchDownloadUrl = new URL(patchDownloadUrlString);
-            connection = (HttpURLConnection) (patchDownloadUrl.openConnection());
-            bin = new BufferedInputStream(connection.getInputStream());
-            File patchDownloadFile = new File(getCodePushPath(), CodePushConstants.PATCH_DOWNLOAD_FILE_NAME);
-            patchDownloadFile.delete();
-            fos = new FileOutputStream(patchDownloadFile);
+            boolean patchApplied = false;
+            HttpURLConnection patchConnection = null;
+            BufferedInputStream patchBin = null;
+            FileOutputStream patchFos = null;
+            BufferedOutputStream patchBout = null;
+            try {
+                URL patchDownloadUrl = new URL(patchDownloadUrlString);
+                patchConnection = (HttpURLConnection) (patchDownloadUrl.openConnection());
+                patchBin = new BufferedInputStream(patchConnection.getInputStream());
+
+                File downloadFolder = new File(getCodePushPath());
+                downloadFolder.mkdirs();
+                File patchDownloadFile = new File(downloadFolder, CodePushConstants.PATCH_DOWNLOAD_FILE_NAME);
+                patchDownloadFile.delete();
+                patchFos = new FileOutputStream(patchDownloadFile);
+                patchBout = new BufferedOutputStream(patchFos, CodePushConstants.DOWNLOAD_BUFFER_SIZE);
+                byte[] patchData = new byte[CodePushConstants.DOWNLOAD_BUFFER_SIZE];
+                int patchBytesRead;
+                while ((patchBytesRead = patchBin.read(patchData, 0, CodePushConstants.DOWNLOAD_BUFFER_SIZE)) >= 0) {
+                    patchBout.write(patchData, 0, patchBytesRead);
+                }
+                patchBout.flush();
+                patchBout.close(); patchBout = null;
+                patchFos.close(); patchFos = null;
+                patchBin.close(); patchBin = null;
+                patchConnection.disconnect(); patchConnection = null;
+
+                String patchText = FileUtils.readFileToOriginString(patchDownloadFile.getAbsolutePath());
+
+                String currentPackageFolderPath = getCurrentPackageFolderPath();
+                if (currentPackageFolderPath == null) {
+                    throw new IOException("No current package folder to apply patch against");
+                }
+                String currentBundlePath = getCurrentPackageBundlePath(expectedBundleFileName);
+                if (currentBundlePath == null || !FileUtils.fileAtPathExists(currentBundlePath)) {
+                    throw new IOException("Current bundle file not found for patching");
+                }
+                String currentBundleContent = FileUtils.readFileToOriginString(currentBundlePath);
+
+                diff_match_patch dmp = new diff_match_patch();
+                List<diff_match_patch.Patch> patches = dmp.patch_fromText(patchText);
+                Object[] results = dmp.patch_apply((LinkedList<diff_match_patch.Patch>) patches, currentBundleContent);
+                String patchedContent = (String) results[0];
+
+                String patchedContentHash = CodePushUpdateUtils.computeHashForString(patchedContent);
+                if (!newUpdateHash.equals(patchedContentHash)) {
+                    throw new IOException("Hash mismatch after patch: expected " + newUpdateHash + ", got " + patchedContentHash);
+                }
+
+                File newFolder = new File(newUpdateFolderPath);
+                newFolder.mkdirs();
+                String newBundlePath = CodePushUtils.appendPathComponent(newUpdateFolderPath, expectedBundleFileName);
+                FileUtils.writeStringToFile(patchedContent, newBundlePath);
+
+                String oldPackageHash = getCurrentPackageHash();
+                if (oldPackageHash != null) {
+                    String oldPackageFolderPath = getPackageFolderPath(oldPackageHash);
+                    FileUtils.deleteDirectoryAtPath(oldPackageFolderPath);
+                }
+
+                patchDownloadFile.delete();
+                patchApplied = true;
+                CodePushUtils.log("Patch applied successfully.");
+            } catch (Exception e) {
+                CodePushUtils.log("Patch apply failed, falling back to full download: " + e.getMessage());
+            } finally {
+                try {
+                    if (patchBout != null) patchBout.close();
+                    if (patchFos != null) patchFos.close();
+                    if (patchBin != null) patchBin.close();
+                    if (patchConnection != null) patchConnection.disconnect();
+                } catch (IOException e) {
+                    CodePushUtils.log("Error closing patch IO resources: " + e.getMessage());
+                }
+            }
+
+            if (patchApplied) {
+                CodePushUtils.writeJsonToFile(updatePackage, newUpdateMetadataPath);
+                return;
+            }
         }
 
         // Download the file while checking if it is a zip and notifying client of progress.

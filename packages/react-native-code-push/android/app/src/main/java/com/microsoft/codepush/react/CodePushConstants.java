@@ -34,4 +34,5 @@ public class CodePushConstants {
     public static final String LATEST_ROLLBACK_TIME_KEY = "time";
     public static final String LATEST_ROLLBACK_COUNT_KEY = "count";
     public static final String CLIENT_UNIQUE_ID_KEY = "clientUniqueId";
+    public static final String PATCH_DOWNLOAD_FILE_NAME = "patch.diff";
 }

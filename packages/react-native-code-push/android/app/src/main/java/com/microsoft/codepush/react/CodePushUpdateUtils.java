@@ -301,4 +301,8 @@ public class CodePushUpdateUtils {
             throw new CodePushUnknownException("Unable to diff-patch-apply files from current package during diff update", e);
         }
     }
+
+    public static String computeHashForString(String input) {
+        return computeHash(new ByteArrayInputStream(input.getBytes()));
+    }
 }

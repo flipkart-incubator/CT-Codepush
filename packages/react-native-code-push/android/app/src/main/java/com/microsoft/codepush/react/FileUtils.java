@@ -200,4 +200,28 @@ public class FileUtils {
             if (out != null) out.close();
         }
     }
+
+    public static String readFileToOriginString(String filePath) throws IOException {
+        FileInputStream fin = null;
+        BufferedReader reader = null;
+        try {
+            File fl = new File(filePath);
+            fin = new FileInputStream(fl);
+            reader = new BufferedReader(new InputStreamReader(fin));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            boolean first = true;
+            while ((line = reader.readLine()) != null) {
+                if (!first) {
+                    sb.append("\n");
+                }
+                sb.append(line);
+                first = false;
+            }
+            return sb.toString();
+        } finally {
+            if (reader != null) reader.close();
+            if (fin != null) fin.close();
+        }
+    }
 }
